@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-default: var(--radius);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-outfit);
+  --font-mono: var(--font-dm-mono);
+}
+
+:root {
+  --background: #0A0A0C;
+  --foreground: #F0EFEC;
+  --card: #141417;
+  --card-foreground: #F0EFEC;
+  --primary: #00C6A7;
+  --primary-foreground: #0A0A0C;
+  --secondary: #1C1C21;
+  --secondary-foreground: #A8A7A3;
+  --muted: #1C1C21;
+  --muted-foreground: #6B6A66;
+  --accent: #00C6A7;
+  --accent-foreground: #0A0A0C;
+  --border: rgba(255, 255, 255, 0.08);
+  --ring: #00C6A7;
+  --radius: 6px;
+  --font-fraunces: 'Fraunces', Georgia, serif;
+  --font-outfit: 'Outfit', system-ui, sans-serif;
+  --font-dm-mono: 'DM Mono', 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-outfit);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

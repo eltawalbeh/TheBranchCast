@@ -1,0 +1,9 @@
+{
+  "title": "BranchCast",
+  "description": "BranchCast is a business audio and radio management platform designed for organizations to efficiently create, manage, and distribute audio content.",
+  "language": "en",
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": true
+  }
+}
