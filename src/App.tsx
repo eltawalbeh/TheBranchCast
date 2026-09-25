@@ -26,6 +26,8 @@ import { HelpPage } from '@/pages/HelpPage';
 import { BillingPage } from '@/pages/BillingPage';
 import { InvoicesPage } from '@/pages/InvoicesPage';
 import { PlayerFleetPage } from '@/pages/PlayerFleetPage';
+import { PlaybackPage } from '@/pages/PlaybackPage';
+import { ProductionReadinessPage } from '@/pages/ProductionReadinessPage';
 
 export default function App() {
   return (
@@ -57,6 +59,8 @@ export default function App() {
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/players" element={<PlayerFleetPage />} />
+            <Route path="/players/playback" element={<PlaybackPage />} />
+            <Route path="/production-readiness" element={<ProductionReadinessPage />} />
             <Route path="/monitoring/activity" element={<ActivityPage />} />
             <Route path="/activity" element={<ActivityPage />} />
             <Route path="/reports" element={<ReportsPage />} />
