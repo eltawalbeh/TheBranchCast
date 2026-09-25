@@ -1,33 +1,22 @@
 import { useState } from 'react';
-import { Outlet, useNavigate, useSearchParams } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { Sidebar, type DemoRole } from './Sidebar';
 import { TopBar } from './TopBar';
+import { useWorkspace } from '@/providers/WorkspaceProvider';
 
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-
-  const roleParam = searchParams.get('role');
-  const role: DemoRole = (['owner', 'marketing', 'operations', 'branch', 'viewer'].includes(roleParam ?? '')
-    ? (roleParam as DemoRole)
-    : 'owner');
-
-  function handleRoleChange(r: DemoRole) {
-    if (r === 'branch') {
-      navigate('/my-location');
-    } else {
-      navigate(r === 'owner' ? '/overview' : `/overview?role=${r}`);
-    }
-  }
+  const { workspace } = useWorkspace();
+  const role = (workspace?.role ?? 'viewer') as DemoRole;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--canvas)' }}>
       <Sidebar
         role={role}
-        onRoleChange={handleRoleChange}
+        onRoleChange={() => undefined}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
+        organizationName={workspace?.name}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>

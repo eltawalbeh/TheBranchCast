@@ -103,6 +103,67 @@ export type Database = {
           },
         ]
       }
+      branch_issue_reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          issue_type: string
+          location_id: string
+          note: string | null
+          organization_id: string
+          resolved_at: string | null
+          state: Database["public"]["Enums"]["alert_state"]
+          zone_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          issue_type: string
+          location_id: string
+          note?: string | null
+          organization_id: string
+          resolved_at?: string | null
+          state?: Database["public"]["Enums"]["alert_state"]
+          zone_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          issue_type?: string
+          location_id?: string
+          note?: string | null
+          organization_id?: string
+          resolved_at?: string | null
+          state?: Database["public"]["Enums"]["alert_state"]
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_issue_reports_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_issue_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_issue_reports_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "audio_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_targets: {
         Row: {
           campaign_id: string
@@ -319,6 +380,7 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          onboarding_completed_at: string | null
           slug: string
           updated_at: string
         }
@@ -327,6 +389,7 @@ export type Database = {
           created_by: string
           id?: string
           name: string
+          onboarding_completed_at?: string | null
           slug: string
           updated_at?: string
         }
@@ -335,6 +398,7 @@ export type Database = {
           created_by?: string
           id?: string
           name?: string
+          onboarding_completed_at?: string | null
           slug?: string
           updated_at?: string
         }
@@ -380,6 +444,8 @@ export type Database = {
           firmware_version: string | null
           id: string
           last_seen_at: string | null
+          pairing_code: string | null
+          pairing_expires_at: string | null
           state: Database["public"]["Enums"]["player_state"]
           updated_at: string
           zone_id: string
@@ -391,6 +457,8 @@ export type Database = {
           firmware_version?: string | null
           id?: string
           last_seen_at?: string | null
+          pairing_code?: string | null
+          pairing_expires_at?: string | null
           state?: Database["public"]["Enums"]["player_state"]
           updated_at?: string
           zone_id: string
@@ -402,6 +470,8 @@ export type Database = {
           firmware_version?: string | null
           id?: string
           last_seen_at?: string | null
+          pairing_code?: string | null
+          pairing_expires_at?: string | null
           state?: Database["public"]["Enums"]["player_state"]
           updated_at?: string
           zone_id?: string
@@ -504,6 +574,60 @@ export type Database = {
           },
         ]
       }
+      workspace_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string
+          email: string
+          expires_at: string
+          id: string
+          location_id: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["branchcast_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by: string
+          email: string
+          expires_at?: string
+          id?: string
+          location_id?: string | null
+          organization_id: string
+          role?: Database["public"]["Enums"]["branchcast_role"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          location_id?: string | null
+          organization_id?: string
+          role?: Database["public"]["Enums"]["branchcast_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -516,6 +640,7 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          onboarding_completed_at: string | null
           slug: string
           updated_at: string
         }

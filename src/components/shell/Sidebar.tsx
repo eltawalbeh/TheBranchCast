@@ -5,7 +5,7 @@ import {
   BarChart3, Users, Settings, HelpCircle, ChevronDown, ChevronRight,
   X, Building2,
 } from 'lucide-react';
-import { currentUser } from '@/data/sample';
+import { useAuth } from '@/providers/AuthProvider';
 
 export type DemoRole = 'owner' | 'marketing' | 'operations' | 'branch' | 'viewer';
 
@@ -39,6 +39,7 @@ interface SidebarProps {
   onRoleChange: (r: DemoRole) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  organizationName?: string;
 }
 
 function NavItem({ label, icon: Icon, to, badge, active }: {
@@ -106,12 +107,15 @@ function NavItem({ label, icon: Icon, to, badge, active }: {
   );
 }
 
-function SidebarContent({ role, onRoleChange, onClose }: {
-  role: DemoRole; onRoleChange: (r: DemoRole) => void; onClose?: () => void;
+function SidebarContent({ role, onRoleChange, onClose, organizationName }: {
+  role: DemoRole; onRoleChange: (r: DemoRole) => void; onClose?: () => void; organizationName?: string;
 }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const userName = String(user?.user_metadata.full_name ?? user?.email?.split('@')[0] ?? 'BranchCast user');
+  const initials = userName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
 
   const mainItems = allNavItems.filter(i => i.roles.includes(role));
   const secondItems = secondaryNavItems.filter(i => i.roles.includes(role));
@@ -151,7 +155,7 @@ function SidebarContent({ role, onRoleChange, onClose }: {
           fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
         }}>
           <Building2 size={14} style={{ flexShrink: 0 }} />
-          <span style={{ flex: 1 }}>Luma Coffee Co.</span>
+          <span style={{ flex: 1 }}>{organizationName ?? 'Your workspace'}</span>
           <ChevronDown size={14} style={{ opacity: 0.5 }} />
         </button>
       </div>
@@ -182,7 +186,7 @@ function SidebarContent({ role, onRoleChange, onClose }: {
       </nav>
 
       {/* Demo role switcher */}
-      <div style={{ padding: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'none', padding: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setRolePickerOpen(p => !p)}
@@ -250,11 +254,11 @@ function SidebarContent({ role, onRoleChange, onClose }: {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
             }}>
-              {currentUser.initials}
+              {initials}
             </span>
             <div style={{ flex: 1, textAlign: 'left', overflow: 'hidden' }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {currentUser.name}
+                {userName}
               </p>
               <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {roleLabels[role]}
@@ -272,10 +276,10 @@ function SidebarContent({ role, onRoleChange, onClose }: {
               zIndex: 100, overflow: 'hidden',
             }}>
               <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>{currentUser.name}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{currentUser.email}</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>{userName}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{user?.email}</p>
               </div>
-              <button style={{
+              <button onClick={() => { void signOut(); }} style={{
                 width: '100%', display: 'block', padding: '9px 14px',
                 textAlign: 'left', fontSize: 13, color: 'var(--danger)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
@@ -295,7 +299,7 @@ export function Sidebar(props: SidebarProps) {
     <>
       {/* Desktop sidebar */}
       <div style={{ display: 'none' }} className="sidebar-desktop">
-        <SidebarContent role={props.role} onRoleChange={props.onRoleChange} />
+        <SidebarContent role={props.role} onRoleChange={props.onRoleChange} organizationName={props.organizationName} />
       </div>
 
       {/* Tablet icon rail hidden for now — using full sidebar up to 768px then drawer */}
@@ -317,7 +321,7 @@ export function Sidebar(props: SidebarProps) {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <SidebarContent role={props.role} onRoleChange={props.onRoleChange} onClose={props.onMobileClose} />
+            <SidebarContent role={props.role} onRoleChange={props.onRoleChange} onClose={props.onMobileClose} organizationName={props.organizationName} />
           </div>
         </div>
       )}
