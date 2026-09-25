@@ -1,20 +1,11 @@
-# BranchCast Phase 7-9 Functional Bundle
+# Phase 10 — Content Library & Audio Assets
 
-This bundle is the complete Phase 7, 8, and 9 implementation for the BranchCast app.
+Upload this folder after the existing Phase 7–9 bundle.
 
-## Upload / merge mapping
+Files map directly to the project:
+- src/pages/ContentLibraryPage.tsx
+- src/App.tsx
+- src/types/database.ts
+- supabase/migrations/20260925160000_branchcast_content_library.sql
 
-Copy the files inside this bundle into the existing project while preserving the relative paths under the bundle:
-
-- `src/*` → project `src/*`
-- `supabase/*` → project `supabase/*`
-- `pnpm-lock.yaml` → project root `pnpm-lock.yaml`
-
-The bundle includes:
-- Public landing page and authentication entry.
-- Workspace onboarding.
-- Locations, audio zones, players, and pairing code setup.
-- Supabase migration, generated database types, and `create-workspace` Edge Function.
-- Direct Supabase browser client wiring.
-
-Validation completed: TypeScript check, Vite production build, Git diff check, and Supabase security advisors.
+This phase adds the private audio-assets bucket, Storage RLS, audio metadata, upload/preview/delete UI, and content library states.
