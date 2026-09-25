@@ -24,6 +24,7 @@ import { ReportIssuePage } from '@/pages/ReportIssuePage';
 import { ActivityPage } from '@/pages/ActivityPage';
 import { HelpPage } from '@/pages/HelpPage';
 import { BillingPage } from '@/pages/BillingPage';
+import { InvoicesPage } from '@/pages/InvoicesPage';
 
 export default function App() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/team" element={<TeamPage />} />
             <Route path="/settings" element={<OrganizationSettingsPage />} />
             <Route path="/settings/billing" element={<BillingPage />} />
+            <Route path="/settings/billing/invoices" element={<InvoicesPage />} />
             <Route path="/organization/team" element={<TeamPage />} />
             <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
             <Route path="/my-location/report-issue" element={<ReportIssuePage />} />
