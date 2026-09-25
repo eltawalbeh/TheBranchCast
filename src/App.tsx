@@ -23,6 +23,7 @@ import { BranchManagerPage } from '@/pages/BranchManagerPage';
 import { ReportIssuePage } from '@/pages/ReportIssuePage';
 import { ActivityPage } from '@/pages/ActivityPage';
 import { HelpPage } from '@/pages/HelpPage';
+import { BillingPage } from '@/pages/BillingPage';
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/team" element={<TeamPage />} />
             <Route path="/settings" element={<OrganizationSettingsPage />} />
+            <Route path="/settings/billing" element={<BillingPage />} />
             <Route path="/organization/team" element={<TeamPage />} />
             <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
             <Route path="/my-location/report-issue" element={<ReportIssuePage />} />
