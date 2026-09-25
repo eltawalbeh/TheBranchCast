@@ -199,6 +199,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          content_item_id: string | null
           created_at: string
           created_by: string
           ends_at: string | null
@@ -210,6 +211,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          content_item_id?: string | null
           created_at?: string
           created_by: string
           ends_at?: string | null
@@ -221,6 +223,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content_item_id?: string | null
           created_at?: string
           created_by?: string
           ends_at?: string | null
@@ -233,6 +236,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "campaigns_content_item_id_fkey"
+            columns: ["content_item_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "campaigns_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -243,11 +253,16 @@ export type Database = {
       }
       content_items: {
         Row: {
+          bucket_id: string
           created_at: string
           created_by: string
+          description: string | null
           duration_seconds: number | null
+          file_size_bytes: number | null
           id: string
           kind: string
+          language: string
+          mime_type: string | null
           organization_id: string
           state: Database["public"]["Enums"]["content_state"]
           storage_path: string | null
@@ -255,11 +270,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bucket_id?: string
           created_at?: string
           created_by: string
+          description?: string | null
           duration_seconds?: number | null
+          file_size_bytes?: number | null
           id?: string
           kind: string
+          language?: string
+          mime_type?: string | null
           organization_id: string
           state?: Database["public"]["Enums"]["content_state"]
           storage_path?: string | null
@@ -267,11 +287,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bucket_id?: string
           created_at?: string
           created_by?: string
+          description?: string | null
           duration_seconds?: number | null
+          file_size_bytes?: number | null
           id?: string
           kind?: string
+          language?: string
+          mime_type?: string | null
           organization_id?: string
           state?: Database["public"]["Enums"]["content_state"]
           storage_path?: string | null
