@@ -16,6 +16,7 @@ import { OnboardingPage } from '@/pages/OnboardingPage';
 import { AddLocationPage, LocationDetailPage, LocationsPage } from '@/pages/LocationsPage';
 import { ContentLibraryPage } from '@/pages/ContentLibraryPage';
 import { CampaignsPage } from '@/pages/CampaignsPage';
+import { SchedulePage } from '@/pages/SchedulePage';
 
 export default function App() {
   return (
@@ -44,7 +45,7 @@ export default function App() {
             <Route path="/campaigns" element={<CampaignsPage />} />
             <Route path="/campaigns/new" element={<CampaignsPage />} />
             <Route path="/campaigns/:id" element={<CampaignsPage />} />
-            <Route path="/schedule" element={<PlaceholderPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/reports" element={<PlaceholderPage />} />
             <Route path="/team" element={<PlaceholderPage />} />
             <Route path="/settings" element={<PlaceholderPage />} />
