@@ -25,6 +25,7 @@ import { ActivityPage } from '@/pages/ActivityPage';
 import { HelpPage } from '@/pages/HelpPage';
 import { BillingPage } from '@/pages/BillingPage';
 import { InvoicesPage } from '@/pages/InvoicesPage';
+import { PlayerFleetPage } from '@/pages/PlayerFleetPage';
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/campaigns/:id" element={<CampaignsPage />} />
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/players" element={<PlayerFleetPage />} />
             <Route path="/monitoring/activity" element={<ActivityPage />} />
             <Route path="/activity" element={<ActivityPage />} />
             <Route path="/reports" element={<ReportsPage />} />
