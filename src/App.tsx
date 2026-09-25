@@ -17,6 +17,12 @@ import { AddLocationPage, LocationDetailPage, LocationsPage } from '@/pages/Loca
 import { ContentLibraryPage } from '@/pages/ContentLibraryPage';
 import { CampaignsPage } from '@/pages/CampaignsPage';
 import { SchedulePage } from '@/pages/SchedulePage';
+import { MonitoringPage } from '@/pages/MonitoringPage';
+import { ReportsPage } from '@/pages/ReportsPage';
+import { TeamPage } from '@/pages/TeamPage';
+import { OrganizationSettingsPage } from '@/pages/OrganizationSettingsPage';
+import { BranchManagerPage } from '@/pages/BranchManagerPage';
+import { ReportIssuePage } from '@/pages/ReportIssuePage';
 
 export default function App() {
   return (
@@ -33,7 +39,7 @@ export default function App() {
             <Route element={<AppShell />}>
             <Route index element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage />} />
-            <Route path="/my-location" element={<MyLocationPage />} />
+            <Route path="/my-location" element={<BranchManagerPage />} />
             <Route path="/monitoring/alerts" element={<AlertCenterPage />} />
             <Route path="/access-denied" element={<AccessDeniedPage />} />
             <Route path="/not-found" element={<NotFoundPage />} />
@@ -46,9 +52,14 @@ export default function App() {
             <Route path="/campaigns/new" element={<CampaignsPage />} />
             <Route path="/campaigns/:id" element={<CampaignsPage />} />
             <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/reports" element={<PlaceholderPage />} />
-            <Route path="/team" element={<PlaceholderPage />} />
-            <Route path="/settings" element={<PlaceholderPage />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/team" element={<TeamPage />} />
+            <Route path="/settings" element={<OrganizationSettingsPage />} />
+            <Route path="/organization/team" element={<TeamPage />} />
+            <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
+            <Route path="/my-location" element={<BranchManagerPage />} />
+            <Route path="/my-location/report-issue" element={<ReportIssuePage />} />
             <Route path="/help" element={<PlaceholderPage />} />
             <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Route>
