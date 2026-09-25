@@ -1,11 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/shell/AppShell';
 import { OverviewPage } from '@/pages/OverviewPage';
-import { MyLocationPage } from '@/pages/MyLocationPage';
 import { AlertCenterPage } from '@/pages/AlertCenterPage';
 import { AccessDeniedPage } from '@/pages/AccessDeniedPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { PlaceholderPage } from '@/pages/PlaceholderPage';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
 import { RequireAuth } from '@/components/auth/RequireAuth';
@@ -23,6 +21,8 @@ import { TeamPage } from '@/pages/TeamPage';
 import { OrganizationSettingsPage } from '@/pages/OrganizationSettingsPage';
 import { BranchManagerPage } from '@/pages/BranchManagerPage';
 import { ReportIssuePage } from '@/pages/ReportIssuePage';
+import { ActivityPage } from '@/pages/ActivityPage';
+import { HelpPage } from '@/pages/HelpPage';
 
 export default function App() {
   return (
@@ -53,14 +53,15 @@ export default function App() {
             <Route path="/campaigns/:id" element={<CampaignsPage />} />
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/monitoring/activity" element={<ActivityPage />} />
+            <Route path="/activity" element={<ActivityPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/team" element={<TeamPage />} />
             <Route path="/settings" element={<OrganizationSettingsPage />} />
             <Route path="/organization/team" element={<TeamPage />} />
             <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
-            <Route path="/my-location" element={<BranchManagerPage />} />
             <Route path="/my-location/report-issue" element={<ReportIssuePage />} />
-            <Route path="/help" element={<PlaceholderPage />} />
+            <Route path="/help" element={<HelpPage />} />
             <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Route>
           </Route>
