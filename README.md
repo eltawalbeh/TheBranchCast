@@ -1,11 +1,11 @@
-# Phase 10 — Content Library & Audio Assets
+# Phase 11 — Campaigns
 
-Upload this folder after the existing Phase 7–9 bundle.
+Upload this folder after Phase 10.
 
 Files map directly to the project:
-- src/pages/ContentLibraryPage.tsx
+- src/pages/CampaignsPage.tsx
 - src/App.tsx
 - src/types/database.ts
-- supabase/migrations/20260925160000_branchcast_content_library.sql
+- supabase/migrations/20260925161000_branchcast_campaigns.sql
 
-This phase adds the private audio-assets bucket, Storage RLS, audio metadata, upload/preview/delete UI, and content library states.
+This phase adds campaign creation, audio asset selection, start/end scheduling fields, zone targeting, campaign list states, and role-aware access.
