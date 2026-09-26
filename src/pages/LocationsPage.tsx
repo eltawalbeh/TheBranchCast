@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { useWorkspace } from "@/providers/WorkspaceProvider"
+import { useAuth } from "@/providers/AuthProvider"
 type LocationRow = {
   id: string
   name: string
@@ -24,6 +25,7 @@ type LocationRow = {
       device_code: string
       pairing_code: string | null
       pairing_expires_at: string | null
+      last_seen_at: string | null
     }[]
   }[]
 }
@@ -258,25 +260,29 @@ export function LocationDetailPage() {
 }
 function LocationDetail() {
   const { workspace } = useWorkspace()
+  const { user } = useAuth()
   const { id = "" } = useParams()
   const [location, setLocation] = useState<LocationRow | null>(null)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [regenerating, setRegenerating] = useState<string | null>(null)
+  const [stopping, setStopping] = useState<string | null>(null)
   const load = async () => {
     if (!supabase || !workspace) return
     const { data, error } = await supabase
       .from("locations")
       .select(
-        "id,name,code,is_active,audio_zones(id,name,players(id,state,device_code,pairing_code,pairing_expires_at))",
+        "id,name,code,is_active,audio_zones(id,name,players(id,state,device_code,pairing_code,pairing_expires_at,last_seen_at))",
       )
       .eq("id", id)
       .single()
-    setLocation(data as LocationRow)
+    if (!error) setLocation(data as LocationRow)
     if (error) setError(error.message)
   }
   useEffect(() => {
     void load()
+    const timer = window.setInterval(() => void load(), 10000)
+    return () => window.clearInterval(timer)
   }, [id, workspace?.id])
   const regenerate = async (playerId: string) => {
     if (!supabase) return
@@ -297,10 +303,33 @@ function LocationDetail() {
       .eq("id", playerId)
     if (resultError) setError(resultError.message)
     else {
-      setMessage("New pairing code generated. It expires in 15 minutes.")
+      setMessage(
+        "New code generated. The previous unused code is invalid. Any connected browser remains connected until you stop or disconnect it.",
+      )
       await load()
     }
     setRegenerating(null)
+  }
+  const stop = async (playerId: string) => {
+    if (!supabase || !user) return
+    setStopping(playerId)
+    setError("")
+    setMessage("")
+    const result = await supabase
+      .from("player_commands")
+      .insert({
+        player_id: playerId,
+        requested_by: user.id,
+        command: "pause",
+        payload: { source: "location-stop" },
+        status: "pending",
+      })
+    if (result.error) setError(result.error.message)
+    else {
+      setMessage("Stop command sent. The browser will pause on its next poll.")
+      await load()
+    }
+    setStopping(null)
   }
   if (error && !location) return <div style={page}>{error}</div>
   if (!location) return <div style={page}>Loading location…</div>
@@ -324,6 +353,7 @@ function LocationDetail() {
       <div style={{ display: "grid", gap: 14 }}>
         {location.audio_zones.map((z) => {
           const p = z.players?.[0]
+          const online = p?.state === "online"
           return (
             <article
               key={z.id}
@@ -351,9 +381,34 @@ function LocationDetail() {
                     color: "var(--ink-secondary)",
                   }}
                 >
-                  {p
-                    ? `${p.device_code} · ${p.state.replace(/-/g, " ")}`
-                    : "No player yet"}
+                  {p ? (
+                    <>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          color: online ? "var(--success)" : "var(--danger)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            background: online
+                              ? "var(--success)"
+                              : "var(--danger)",
+                          }}
+                        />
+                        {online ? "Online" : "Offline"}
+                      </span>{" "}
+                      · {p.device_code}
+                    </>
+                  ) : (
+                    "No player yet"
+                  )}
                 </p>
               </div>
               {p ? (
@@ -373,20 +428,37 @@ function LocationDetail() {
                   </strong>
                   <div style={{ fontSize: 12, color: "var(--warning)" }}>
                     {p.pairing_code
-                      ? "Expires in 15 minutes"
+                      ? "One active code · expires in 15 minutes"
                       : "Generate a code to connect this browser"}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void regenerate(p.id)}
-                    disabled={regenerating === p.id}
-                    style={secondary}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      justifyContent: "flex-end",
+                    }}
                   >
-                    <RefreshCw size={14} />
-                    {regenerating === p.id
-                      ? "Generating…"
-                      : "Regenerate Pairing Code"}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => void stop(p.id)}
+                      disabled={stopping === p.id || !online}
+                      style={secondary}
+                    >
+                      {stopping === p.id ? "Stopping…" : "Stop player"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void regenerate(p.id)}
+                      disabled={regenerating === p.id}
+                      style={secondary}
+                    >
+                      <RefreshCw size={14} />
+                      {regenerating === p.id
+                        ? "Generating…"
+                        : "Regenerate Pairing Code"}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <span style={pill}>No player</span>
