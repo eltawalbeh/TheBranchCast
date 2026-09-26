@@ -81,3 +81,4 @@ export function useWorkspace() {
   if (!context) throw new Error('useWorkspace must be used inside WorkspaceProvider');
   return context;
 }
+

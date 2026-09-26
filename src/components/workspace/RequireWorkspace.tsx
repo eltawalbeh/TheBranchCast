@@ -24,3 +24,4 @@ export function RequireWorkspace() {
 
   return workspace ? <Outlet /> : <Navigate to="/onboarding" replace />;
 }
+

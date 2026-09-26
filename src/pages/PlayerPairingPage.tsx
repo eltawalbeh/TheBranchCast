@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import {
   CheckCircle2,
   Copy,
@@ -85,9 +86,7 @@ export function PlayerPairingPage() {
         <div>
           <strong>How pairing works</strong>
           <p>
-            Open the Player Agent on the device, enter the active code below,
-            then start the agent. The code expires after 15 minutes and can be
-            regenerated.
+            Open <Link to="/player" style={{ color: "var(--signal)", fontWeight: 700 }}>Player Mode</Link> on the desktop or mobile browser that should play the audio, enter the active code below, then keep that tab open. The code expires after 15 minutes and can be regenerated.
           </p>
         </div>
       </section>
@@ -230,3 +229,4 @@ const paired = {
   color: "var(--success)",
   fontSize: 13,
 } as const
+
