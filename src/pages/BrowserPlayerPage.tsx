@@ -32,7 +32,7 @@ export function BrowserPlayerPage() {
 
   const playLocal = async () => {
     if (!audioRef.src) {
-      setError('No audio is loaded yet. Select an audio asset in Playback and press Play.');
+      setError('Waiting for the manager playlist. Start playback from the manager Playback page first.');
       return;
     }
     try { await unlockAudio(); await audioRef.play(); setError(''); }
