@@ -14,7 +14,7 @@ type WorkspaceContextValue = {
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   // Start guarded routes in a loading state. Auth restores its session
   // asynchronously, so initializing from the first (null) user would let
@@ -59,6 +59,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
+    if (authLoading) {
+      setIsLoading(true);
+      return;
+    }
+
     if (!user) {
       setWorkspace(null);
       setError(null);
@@ -70,7 +75,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     // This prevents a restored session from being mistaken for a new user.
     setIsLoading(true);
     void refresh();
-  }, [user?.id, refresh]);
+  }, [authLoading, user?.id, refresh]);
 
   const value = useMemo(() => ({ workspace, isLoading, error, refresh }), [workspace, isLoading, error, refresh]);
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
@@ -81,4 +86,3 @@ export function useWorkspace() {
   if (!context) throw new Error('useWorkspace must be used inside WorkspaceProvider');
   return context;
 }
-
