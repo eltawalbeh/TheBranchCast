@@ -1,48 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, RefreshCw, Check } from 'lucide-react';
+import { Check, ChevronRight, RefreshCw } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
 
-type AlertRow = { id: string; title: string | null; details: string | null; severity: string; state: string; created_at: string; location_id: string | null };
+type AlertRow = { id: string; title: string; details: string | null; severity: string; state: string; created_at: string; zone_id: string };
 
 export function AlertCenterPage() {
-  const navigate = useNavigate();
-  const { workspace } = useWorkspace();
-  const [alerts, setAlerts] = useState<AlertRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-
-  const load = useCallback(async () => {
-    if (!supabase || !workspace) return;
-    setLoading(true);
-    const { data, error } = await supabase.from('alerts').select('id,title,details,severity,state,created_at,location_id').eq('organization_id', workspace.id).neq('state', 'resolved').order('created_at', { ascending: false });
-    setAlerts((data ?? []) as AlertRow[]);
-    setMessage(error?.message ?? '');
-    setLoading(false);
-  }, [workspace?.id]);
-
+  const navigate = useNavigate(); const { workspace } = useWorkspace();
+  const [alerts, setAlerts] = useState<AlertRow[]>([]); const [loading, setLoading] = useState(true); const [message, setMessage] = useState('');
+  const load = useCallback(async () => { if (!supabase || !workspace) return; setLoading(true); const result = await supabase.from('alerts').select('id,title,details,severity,state,created_at,zone_id').neq('state', 'resolved').order('created_at', { ascending: false }); setAlerts((result.data ?? []) as AlertRow[]); setMessage(result.error?.message ?? ''); setLoading(false); }, [workspace?.id]);
   useEffect(() => { void load(); }, [load]);
-
-  const resolve = async (id: string) => {
-    if (!supabase) return;
-    const { error } = await supabase.from('alerts').update({ state: 'resolved', resolved_at: new Date().toISOString() }).eq('id', id);
-    if (error) setMessage(error.message); else await load();
-  };
-
-  return <div style={{ padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}>
-    <header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
-      <div><h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>Alert center</h1><p style={{ margin: '6px 0 0', color: 'var(--ink-secondary)', fontSize: 14 }}>{alerts.length} active alert{alerts.length === 1 ? '' : 's'} from your workspace.</p></div>
-      <Button variant="secondary" size="sm" onClick={() => void load()} style={{ display: 'flex', gap: 7, alignItems: 'center' }}><RefreshCw size={14}/> Refresh</Button>
-    </header>
-    {message && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{message}</p>}
-    <section style={{ background: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-      {loading ? <p style={{ padding: 24, color: 'var(--ink-secondary)' }}>Loading live alerts…</p> : alerts.length === 0 ? <p style={{ padding: 28, color: 'var(--ink-secondary)' }}>No active alerts. All monitored locations are operating normally.</p> : alerts.map((a, i) => <div key={a.id} style={{ padding: '18px 20px', borderBottom: i < alerts.length - 1 ? '1px solid var(--border-color)' : 'none', display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-        <div style={{ flex: 1 }}><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 5 }}><StatusBadge status={a.severity === 'critical' || a.severity === 'high' ? 'High' : 'Medium'} /><strong style={{ fontSize: 14 }}>{a.title ?? 'Playback alert'}</strong></div><p style={{ margin: 0, color: 'var(--ink-secondary)', fontSize: 13 }}>{a.details ?? 'This alert requires attention.'}</p><time style={{ display: 'block', marginTop: 7, color: 'var(--ink-tertiary)', fontSize: 12 }}>{new Date(a.created_at).toLocaleString()}</time></div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}><Button variant="secondary" size="sm" onClick={() => navigate(a.location_id ? `/locations/${a.location_id}` : '/monitoring')}>View <ChevronRight size={14}/></Button><Button variant="primary" size="sm" onClick={() => void resolve(a.id)}><Check size={14}/> Resolve</Button></div>
-      </div>)}
-    </section>
-  </div>;
+  const resolve = async (id: string) => { if (!supabase) return; const result = await supabase.from('alerts').update({ state: 'resolved', resolved_at: new Date().toISOString() }).eq('id', id); if (result.error) setMessage(result.error.message); else await load(); };
+  return <div style={{ padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}><header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}><div><h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>Alert center</h1><p style={{ margin: '6px 0 0', color: 'var(--ink-secondary)', fontSize: 14 }}>{alerts.length} active alert{alerts.length === 1 ? '' : 's'} from your workspace.</p></div><Button variant="secondary" size="sm" onClick={() => void load()} style={{ display: 'flex', gap: 7, alignItems: 'center' }}><RefreshCw size={14}/> Refresh</Button></header>{message && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{message}</p>}<section style={{ background: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>{loading ? <p style={{ padding: 24, color: 'var(--ink-secondary)' }}>Loading live alerts…</p> : alerts.length === 0 ? <p style={{ padding: 28, color: 'var(--ink-secondary)' }}>No active alerts. All monitored locations are operating normally.</p> : alerts.map((a, i) => <div key={a.id} style={{ padding: '18px 20px', borderBottom: i < alerts.length - 1 ? '1px solid var(--border-color)' : 'none', display: 'flex', alignItems: 'flex-start', gap: 16 }}><div style={{ flex: 1 }}><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 5 }}><StatusBadge status={a.severity === 'critical' || a.severity === 'high' ? 'High' : 'Medium'} /><strong style={{ fontSize: 14 }}>{a.title}</strong></div><p style={{ margin: 0, color: 'var(--ink-secondary)', fontSize: 13 }}>{a.details ?? 'This alert requires attention.'}</p><time style={{ display: 'block', marginTop: 7, color: 'var(--ink-tertiary)', fontSize: 12 }}>{new Date(a.created_at).toLocaleString()}</time></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}><Button variant="secondary" size="sm" onClick={() => navigate('/monitoring')}><ChevronRight size={14}/> View</Button><Button variant="primary" size="sm" onClick={() => void resolve(a.id)}><Check size={14}/> Resolve</Button></div></div>)}</section></div>;
 }

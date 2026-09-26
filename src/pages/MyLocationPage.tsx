@@ -1,100 +1,11 @@
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
-import { AlertTriangle } from 'lucide-react';
-import { zones } from '@/data/sample';
-
-const myLocation = zones.filter(z => z.location === 'Luma Coffee — Sweifieh');
-
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      background: 'var(--surface)',
-      border: '1px solid var(--border-color)',
-      borderRadius: 'var(--radius-md)',
-      boxShadow: 'var(--shadow-sm)',
-      ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-export function MyLocationPage() {
-  const navigate = useNavigate();
-
-  return (
-    <div style={{ padding: '32px 40px', maxWidth: 1000, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: 'var(--ink)' }}>My location</h1>
-          <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--ink-secondary)' }}>
-            Luma Coffee — Sweifieh
-          </p>
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/help?subject=report-issue')}
-          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-        >
-          <AlertTriangle size={14} />
-          Report an issue
-        </Button>
-      </div>
-
-      {/* Hero player card */}
-      <Card style={{ padding: 24, marginBottom: 24, background: '#1A1410', border: 'none' }}>
-        <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500, letterSpacing: '0.04em' }}>
-          Current player status
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: '#FFFFFF' }}>Sweifieh — Main Floor</p>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Player: BC-SWF-01</p>
-          </div>
-          <StatusBadge status="Offline" />
-        </div>
-        <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(197,59,59,0.15)', borderRadius: 8 }}>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--danger)', fontWeight: 500 }}>
-            Player is offline. Last seen 18 min ago.
-          </p>
-        </div>
-      </Card>
-
-      {/* Audio zone cards */}
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', margin: '0 0 16px' }}>Audio zones</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {myLocation.map((zone, i) => (
-          <Card key={i} style={{ padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{zone.zone}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--ink-tertiary)' }}>
-                  {zone.player !== 'Not paired' ? `Player: ${zone.player}` : 'No player paired'}
-                </p>
-              </div>
-              <StatusBadge status={zone.status} pulse={zone.status === 'Online'} />
-            </div>
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 12 }}>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-tertiary)', fontWeight: 500 }}>Now playing</p>
-              <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--ink)' }}>{zone.nowPlaying}</p>
-            </div>
-            {zone.lastSeen !== '—' && (
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--ink-tertiary)' }}>
-                Last seen: {zone.lastSeen}
-              </p>
-            )}
-          </Card>
-        ))}
-      </div>
-
-      <style>{`
-        @media (max-width: 640px) {
-          .zone-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
-  );
-}
+import { supabase } from '@/lib/supabase';
+import { useWorkspace } from '@/providers/WorkspaceProvider';
+import { useWorkspaceRealtime } from '@/hooks/useWorkspaceRealtime';
+type LocationData = { id: string; name: string; audio_zones: Array<{ id: string; name: string; players: Array<{ id: string; display_name: string | null; state: string; last_seen_at: string | null; device_code: string }> }> };
+export function MyLocationPage() { const navigate = useNavigate(); const { workspace } = useWorkspace(); const [location, setLocation] = useState<LocationData | null>(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const load = useCallback(async () => { if (!supabase || !workspace) return; setLoading(true); let query = supabase.from('locations').select('id,name,audio_zones(id,name,players(id,display_name,state,last_seen_at,device_code))').eq('organization_id', workspace.id); if (workspace.locationId) query = query.eq('id', workspace.locationId); const result = await query.limit(1).maybeSingle(); setLocation(result.data as unknown as LocationData | null); setError(result.error?.message ?? ''); setLoading(false); }, [workspace?.id, workspace?.locationId]); useEffect(() => { void load(); }, [load]); useWorkspaceRealtime(['players', 'alerts'], load); if (loading) return <div style={page}>Loading your location…</div>; if (error) return <div style={page}><p style={{ color: 'var(--danger)' }}>{error}</p></div>; return <div style={page}><header style={header}><div><h1 style={title}>My location</h1><p style={sub}>{location?.name ?? 'No location assigned'}</p></div><Button variant="secondary" size="sm" onClick={() => navigate('/my-location/report-issue')} style={{ display: 'flex', gap: 6, alignItems: 'center' }}><AlertTriangle size={14}/> Report an issue</Button></header>{!location ? <section style={card}><p style={sub}>Your account has not been assigned to a location yet.</p></section> : <><section style={{ ...card, background: '#1A1410', border: 'none', color: '#fff', marginBottom: 24 }}><p style={{ color: 'rgba(255,255,255,.55)', fontSize: 12 }}>CURRENT LOCATION</p><h2 style={{ margin: '8px 0', fontSize: 22 }}>{location.name}</h2><p style={{ color: 'rgba(255,255,255,.65)', fontSize: 13 }}>{location.audio_zones.length} audio zone{location.audio_zones.length === 1 ? '' : 's'}</p></section><h2 style={sectionTitle}>Audio zones</h2><div className="zone-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 16 }}>{location.audio_zones.map(zone => { const player = zone.players[0]; const state = player?.state ?? 'unpaired'; return <section key={zone.id} style={card}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}><div><strong>{zone.name}</strong><p style={sub}>{player?.device_code ?? 'No player paired'}</p></div><StatusBadge status={state === 'online' ? 'Online' : state === 'unpaired' ? 'Not Paired' : 'Offline'} pulse={state === 'online'}/></div><p style={{ ...sub, marginTop: 16 }}>{player?.last_seen_at ? `Last seen ${new Date(player.last_seen_at).toLocaleString()}` : 'No heartbeat received yet.'}</p></section>; })}</div></>}</div>; }
+const page = { padding: '32px 40px', maxWidth: 1000, margin: '0 auto' } as const; const header = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 28 } as const; const title = { margin: 0, fontSize: 28, fontWeight: 600 } as const; const sub = { margin: '6px 0 0', color: 'var(--ink-secondary)', fontSize: 13 } as const; const card = { background: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: 22, boxShadow: 'var(--shadow-sm)' } as const; const sectionTitle = { margin: '0 0 16px', fontSize: 17 } as const;
