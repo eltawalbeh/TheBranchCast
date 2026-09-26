@@ -1,15 +1,202 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
-import { MetricCard } from '@/components/ui/MetricCard';
-import { Button } from '@/components/ui/Button';
-import { supabase } from '@/lib/supabase';
-import { useWorkspace } from '@/providers/WorkspaceProvider';
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react"
+import { MetricCard } from "@/components/ui/MetricCard"
+import { Button } from "@/components/ui/Button"
+import { supabase } from "@/lib/supabase"
+import { useWorkspace } from "@/providers/WorkspaceProvider"
 
-type Overview = { locations: number; players: number; online: number; campaigns: number; alerts: number };
+type Overview = {
+  locations: number
+  players: number
+  online: number
+  campaigns: number
+  alerts: number
+}
 export function OverviewPage() {
-  const navigate = useNavigate(); const { workspace } = useWorkspace(); const [data, setData] = useState<Overview>({ locations: 0, players: 0, online: 0, campaigns: 0, alerts: 0 }); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
-  const load = useCallback(async () => { if (!supabase || !workspace) return; setLoading(true); const [locations, players, campaigns, alerts] = await Promise.all([supabase.from('locations').select('id', { count: 'exact', head: true }).eq('organization_id', workspace.id), supabase.from('players').select('id,state'), supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('organization_id', workspace.id).neq('state', 'archived'), supabase.from('alerts').select('id', { count: 'exact', head: true }).neq('state', 'resolved')]); const rows = (players.data ?? []) as Array<{ id: string; state: string }>; const firstError = locations.error ?? players.error ?? campaigns.error ?? alerts.error; setData({ locations: locations.count ?? 0, players: rows.length, online: rows.filter(p => p.state === 'online').length, campaigns: campaigns.count ?? 0, alerts: alerts.count ?? 0 }); setError(firstError?.message ?? ''); setLoading(false); }, [workspace?.id]);
-  useEffect(() => { void load(); }, [load]); const ratio = data.players ? `${data.online} of ${data.players}` : '0';
-  return <div style={{ padding: '32px 40px', maxWidth: 1200, margin: '0 auto' }}><header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}><div><p style={{ margin: 0, color: 'var(--signal)', fontSize: 12, fontWeight: 600, letterSpacing: '.08em' }}>WORKSPACE OVERVIEW</p><h1 style={{ margin: '8px 0 0', fontSize: 30 }}>Good to see you, {workspace?.name ?? 'there'}.</h1><p style={{ margin: '8px 0 0', color: 'var(--ink-secondary)' }}>Live operational health for your BranchCast workspace.</p></div><Button variant="secondary" size="sm" onClick={() => void load()} style={{ display: 'flex', gap: 7, alignItems: 'center' }}><RefreshCw size={14}/> Refresh</Button></header>{error && <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>}<section className="overview-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 16 }}><MetricCard label="Active locations" metric={loading ? '—' : String(data.locations)} context="This workspace" status="neutral"/><MetricCard label="Players online" metric={loading ? '—' : ratio} context={data.players ? `${data.players - data.online} need attention` : 'No players yet'} status={data.online === data.players ? 'success' : 'warning'}/><MetricCard label="Active campaigns" metric={loading ? '—' : String(data.campaigns)} context="Not archived" status="info"/><MetricCard label="Active alerts" metric={loading ? '—' : String(data.alerts)} context={data.alerts ? 'Review required' : 'All clear'} status={data.alerts ? 'warning' : 'success'}/></section><section style={{ marginTop: 20, padding: 24, background: '#1A1410', color: '#fff', borderRadius: 'var(--radius-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}><div><p style={{ margin: 0, color: 'var(--signal)', fontSize: 12, fontWeight: 600 }}>LIVE NETWORK</p><h2 style={{ margin: '8px 0', fontSize: 22 }}>{data.players ? `${data.online} of ${data.players} players online` : 'No players connected yet'}</h2><p style={{ margin: 0, color: 'rgba(255,255,255,.65)', fontSize: 13 }}>{data.alerts ? `${data.alerts} active alert${data.alerts === 1 ? '' : 's'} require attention.` : 'All monitored locations are operating normally.'}</p></div><Button variant="secondary" size="sm" onClick={() => navigate('/monitoring')} style={{ display: 'flex', gap: 7, alignItems: 'center' }}>{data.alerts ? <AlertTriangle size={14}/> : <CheckCircle2 size={14}/>} Open monitoring</Button></section><style>{'@media(max-width:760px){.overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}'}</style></div>;
+  const navigate = useNavigate()
+  const { workspace } = useWorkspace()
+  const [data, setData] = useState<Overview>({
+    locations: 0,
+    players: 0,
+    online: 0,
+    campaigns: 0,
+    alerts: 0,
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const load = useCallback(async () => {
+    if (!supabase || !workspace) return
+    setLoading(true)
+    const [locations, players, campaigns, alerts] = await Promise.all([
+      supabase
+        .from("locations")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", workspace.id),
+      supabase.from("players").select("id,state"),
+      supabase
+        .from("campaigns")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", workspace.id)
+        .neq("state", "archived"),
+      supabase
+        .from("alerts")
+        .select("id", { count: "exact", head: true })
+        .neq("state", "resolved"),
+    ])
+    const rows = (players.data ?? []) as Array<{ id: string state: string }>
+    const firstError =
+      locations.error ?? players.error ?? campaigns.error ?? alerts.error
+    setData({
+      locations: locations.count ?? 0,
+      players: rows.length,
+      online: rows.filter((p) => p.state === "online").length,
+      campaigns: campaigns.count ?? 0,
+      alerts: alerts.count ?? 0,
+    })
+    setError(firstError?.message ?? "")
+    setLoading(false)
+  }, [workspace?.id])
+  useEffect(() => {
+    void load()
+  }, [load])
+  const ratio = data.players ? `${data.online} of ${data.players}` : "0"
+  return (
+    <div style={{ padding: "32px 40px", maxWidth: 1200, margin: "0 auto" }}>
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 16,
+          marginBottom: 28,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--signal)",
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: ".08em",
+            }}
+          >
+            WORKSPACE OVERVIEW
+          </p>
+          <h1 style={{ margin: "8px 0 0", fontSize: 30 }}>
+            Good to see you, {workspace?.name ?? "there"}.
+          </h1>
+          <p style={{ margin: "8px 0 0", color: "var(--ink-secondary)" }}>
+            Live operational health for your BranchCast workspace.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => void load()}
+          style={{ display: "flex", gap: 7, alignItems: "center" }}
+        >
+          <RefreshCw size={14} /> Refresh
+        </Button>
+      </header>
+      {error && <p style={{ color: "var(--danger)", fontSize: 13 }}>{error}</p>}
+      <section
+        className="overview-metrics"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+          gap: 16,
+        }}
+      >
+        <MetricCard
+          label="Active locations"
+          metric={loading ? "—" : String(data.locations)}
+          context="This workspace"
+          status="neutral"
+        />
+        <MetricCard
+          label="Players online"
+          metric={loading ? "—" : ratio}
+          context={
+            data.players
+              ? `${data.players - data.online} need attention`
+              : "No players yet"
+          }
+          status={data.online === data.players ? "success" : "warning"}
+        />
+        <MetricCard
+          label="Active campaigns"
+          metric={loading ? "—" : String(data.campaigns)}
+          context="Not archived"
+          status="info"
+        />
+        <MetricCard
+          label="Active alerts"
+          metric={loading ? "—" : String(data.alerts)}
+          context={data.alerts ? "Review required" : "All clear"}
+          status={data.alerts ? "warning" : "success"}
+        />
+      </section>
+      <section
+        style={{
+          marginTop: 20,
+          padding: 24,
+          background: "#1A1410",
+          color: "#fff",
+          borderRadius: "var(--radius-lg)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 20,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--signal)",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            LIVE NETWORK
+          </p>
+          <h2 style={{ margin: "8px 0", fontSize: 22 }}>
+            {data.players
+              ? `${data.online} of ${data.players} players online`
+              : "No players connected yet"}
+          </h2>
+          <p
+            style={{ margin: 0, color: "rgba(255,255,255,.65)", fontSize: 13 }}
+          >
+            {data.alerts
+              ? `${data.alerts} active alert${
+                  data.alerts === 1 ? "" : "s"
+                } require attention.`
+              : "All monitored locations are operating normally."}
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate("/monitoring")}
+          style={{ display: "flex", gap: 7, alignItems: "center" }}
+        >
+          {data.alerts ? (
+            <AlertTriangle size={14} />
+          ) : (
+            <CheckCircle2 size={14} />
+          )}{" "}
+          Open monitoring
+        </Button>
+      </section>
+      <style>
+        {
+          "@media(max-width:760px){.overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}"
+        }
+      </style>
+    </div>
+  )
 }
