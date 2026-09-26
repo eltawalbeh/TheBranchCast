@@ -1,33 +1,26 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useAuth } from './AuthProvider';
-import { supabase } from '@/lib/supabase';
-import type { Database } from '@/types/database';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useWorkspace } from '@/providers/WorkspaceProvider';
 
-type Role = Database['public']['Enums']['branchcast_role'];
-type Workspace = { id: string; name: string; slug: string; role: Role; locationId: string | null };
-type WorkspaceContextValue = { workspace: Workspace | null; isLoading: boolean; refresh: () => Promise<void> };
-const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
+export function RequireWorkspace() {
+  const { workspace, isLoading, error, refresh } = useWorkspace();
 
-export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [isLoading, setIsLoading] = useState(Boolean(user));
-  const refresh = async () => {
-    if (!supabase || !user) { setWorkspace(null); setIsLoading(false); return; }
-    setIsLoading(true);
-    const { data } = await supabase.from('organization_members')
-      .select('role, location_id, organizations(id, name, slug)')
-      .eq('user_id', user.id).limit(1).maybeSingle();
-    const organization = data?.organizations as unknown as { id: string; name: string; slug: string } | null;
-    setWorkspace(data && organization ? { id: organization.id, name: organization.name, slug: organization.slug, role: data.role, locationId: data.location_id } : null);
-    setIsLoading(false);
-  };
-  useEffect(() => { void refresh(); }, [user?.id]);
-  const value = useMemo(() => ({ workspace, isLoading, refresh }), [workspace, isLoading]);
-  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
-}
-export function useWorkspace() {
-  const context = useContext(WorkspaceContext);
-  if (!context) throw new Error('useWorkspace must be used inside WorkspaceProvider');
-  return context;
+  if (isLoading) {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--ink-secondary)' }}>Opening workspace…</div>;
+  }
+
+  // A query/auth failure is not proof that onboarding is incomplete.
+  // Keep the user in context and offer a safe retry instead of losing their route.
+  if (error) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, color: 'var(--ink-primary)' }}>
+        <div style={{ maxWidth: 440, textAlign: 'center' }}>
+          <h1 style={{ marginBottom: 8 }}>Workspace unavailable</h1>
+          <p style={{ color: 'var(--ink-secondary)', marginBottom: 16 }}>{error}</p>
+          <button type="button" onClick={() => void refresh()}>Try again</button>
+        </div>
+      </div>
+    );
+  }
+
+  return workspace ? <Outlet /> : <Navigate to="/onboarding" replace />;
 }
