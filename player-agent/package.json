@@ -1,0 +1,6 @@
+{
+  "name": "branchcast-player-agent",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node index.mjs" }
+}
