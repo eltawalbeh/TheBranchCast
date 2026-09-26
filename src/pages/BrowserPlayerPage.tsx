@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { CheckCircle2, LogOut, Radio, RefreshCw, Wifi } from 'lucide-react';
+import { CheckCircle2, LogOut, Pause, Play, Radio, RefreshCw, SkipForward, Wifi } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 type PlayerIdentity = { id: string; display_name: string | null; device_code: string; state: string };
@@ -13,6 +13,9 @@ export function BrowserPlayerPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [lastHeartbeat, setLastHeartbeat] = useState<string | null>(null);
+  const [track, setTrack] = useState('No audio selected');
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useState(() => new Audio())[0];
 
   useEffect(() => {
     try {
@@ -64,14 +67,33 @@ export function BrowserPlayerPage() {
   }, [heartbeat, session]);
 
   useEffect(() => {
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    audioRef.addEventListener('play', onPlay); audioRef.addEventListener('pause', onPause);
+    return () => { audioRef.pause(); audioRef.removeEventListener('play', onPlay); audioRef.removeEventListener('pause', onPause); };
+  }, [audioRef]);
+
+  useEffect(() => {
     if (!session) return;
     const poll = async () => {
       try {
         const data = await call('player-browser-runtime', { session_token: session.token, action: 'poll' });
-        const command = data.command as { id: string; command: string } | null;
+        const command = data.command as { id: string; command: string; payload?: { audio_url?: string; title?: string } } | null;
         if (command) {
-          setMessage(`Command received: ${command.command}`);
-          await call('player-browser-runtime', { session_token: session.token, action: 'ack', command_id: command.id, status: 'acknowledged' });
+          try {
+            if (command.command === 'play') {
+              const url = command.payload?.audio_url;
+              if (!url) throw new Error('The selected audio asset has no playable file.');
+              if (audioRef.src !== url) { audioRef.src = url; audioRef.load(); }
+              await audioRef.play(); setTrack(command.payload?.title || 'Audio asset');
+            } else if (command.command === 'pause') audioRef.pause();
+            else if (command.command === 'skip') { audioRef.pause(); audioRef.currentTime = 0; setTrack('No audio selected'); }
+            setMessage(`Command completed: ${command.command}`);
+            await call('player-browser-runtime', { session_token: session.token, action: 'ack', command_id: command.id, status: 'acknowledged' });
+          } catch (commandError) {
+            await call('player-browser-runtime', { session_token: session.token, action: 'ack', command_id: command.id, status: 'failed', error_message: commandError instanceof Error ? commandError.message : 'Playback failed.' });
+            setError(commandError instanceof Error ? commandError.message : 'Playback failed.');
+          }
         }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : 'Runtime connection failed.');
@@ -89,7 +111,7 @@ export function BrowserPlayerPage() {
 
   if (!session) return <main style={shell}><section style={card}><div style={brand}>Branch<span>Cast</span></div><div style={icon}><Radio size={30} /></div><p style={eyebrow}>BROWSER PLAYER</p><h1 style={title}>Connect this browser</h1><p style={sub}>Open this page on the desktop or mobile browser that should play this branch’s audio. Enter the pairing code from the manager’s Location page.</p><form onSubmit={pair} style={form}><label style={label}>Pairing code<input autoFocus inputMode="text" autoCapitalize="characters" maxLength={12} value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="e.g. 7E35ED" style={input} /></label>{error && <p style={errorText}>{error}</p>}<button disabled={busy || !code.trim()} style={primary}>{busy ? 'Connecting…' : 'Connect browser player'}</button></form><p style={hint}>This page does not require a manager login. Keep this tab open while the player is running.</p></section></main>;
 
-  return <main style={shell}><section style={card}><div style={brand}>Branch<span>Cast</span></div><div style={icon}><Wifi size={30} /></div><p style={eyebrow}>BROWSER PLAYER</p><h1 style={title}>{session.player.display_name || 'BranchCast player'}</h1><p style={sub}>This browser is connected and sending its heartbeat to BranchCast.</p><div style={connected}><CheckCircle2 size={18} />{statusText}</div>{message && <p style={messageText}>{message}</p>}{error && <p style={errorText}>{error}</p>}<div style={actions}><button type="button" onClick={() => void heartbeat()} style={secondary}><RefreshCw size={15} /> Send heartbeat</button><button type="button" onClick={() => void disconnect()} style={danger}><LogOut size={15} /> Disconnect</button></div><p style={hint}>Leave this tab open. The manager can now use Playback for this player.</p></section></main>;
+  return <main style={shell}><section style={card}><div style={brand}>Branch<span>Cast</span></div><div style={icon}><Wifi size={30} /></div><p style={eyebrow}>BROWSER PLAYER</p><h1 style={title}>{session.player.display_name || 'BranchCast player'}</h1><p style={sub}>This browser is connected and sending its heartbeat to BranchCast.</p><div style={connected}><CheckCircle2 size={18} />{statusText}</div><div style={nowPlaying}><span>{playing ? <Play size={17} /> : <Pause size={17} />}</span><div><strong>{track}</strong><small>{playing ? 'Playing in this browser' : 'Paused'}</small></div></div>{message && <p style={messageText}>{message}</p>}{error && <p style={errorText}>{error}</p>}<div style={actions}><button type="button" onClick={() => void heartbeat()} style={secondary}><RefreshCw size={15} /> Send heartbeat</button><button type="button" onClick={() => { audioRef.pause(); audioRef.currentTime = 0; }} style={secondary}><SkipForward size={15} /> Stop</button><button type="button" onClick={() => void disconnect()} style={danger}><LogOut size={15} /> Disconnect</button></div><p style={hint}>Leave this tab open. The manager can now use Playback for this player.</p></section></main>;
 }
 
 const shell = { minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--canvas)', padding: 24 } as const;
@@ -106,6 +128,7 @@ const primary = { border: 0, borderRadius: 9, padding: '13px 16px', background: 
 const secondary = { display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--border-color)', borderRadius: 9, padding: '11px 13px', background: '#fff', cursor: 'pointer' } as const;
 const danger = { ...secondary, color: 'var(--danger)' } as const;
 const connected = { display: 'flex', alignItems: 'center', gap: 8, marginTop: 22, padding: '12px 14px', borderRadius: 9, color: 'var(--success)', background: 'rgba(44,167,96,.10)', fontSize: 13 } as const;
+const nowPlaying = { display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, padding: '12px 14px', borderRadius: 9, background: 'var(--surface-subtle)', color: 'var(--ink)' } as const;
 const actions = { display: 'flex', gap: 9, flexWrap: 'wrap', marginTop: 20 } as const;
 const errorText = { color: 'var(--danger)', fontSize: 13, margin: 0 } as const;
 const messageText = { color: 'var(--signal)', fontSize: 13 } as const;

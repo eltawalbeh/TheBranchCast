@@ -25,6 +25,17 @@ Deno.serve(async (request) => {
   if (result.error) return json({ error: result.error.message }, 500)
   if (!result.data) return json({ command: null })
   await admin.from('player_commands').update({ status: 'acknowledged', claimed_at: new Date().toISOString() }).eq('id', result.data.id).eq('status', 'pending')
-  return json({ command: result.data })
+  let payload = (result.data.payload ?? {}) as Record<string, unknown>
+  const contentItemId = typeof payload.content_item_id === 'string' ? payload.content_item_id : null
+  if (contentItemId) {
+    const item = await admin.from('content_items').select('id,title,storage_path,bucket_id').eq('id', contentItemId).maybeSingle()
+    if (item.error) return json({ error: item.error.message }, 500)
+    if (item.data?.storage_path) {
+      const signed = await admin.storage.from(item.data.bucket_id || 'audio-assets').createSignedUrl(item.data.storage_path, 3600)
+      if (signed.error) return json({ error: signed.error.message }, 500)
+      payload = { ...payload, audio_url: signed.data.signedUrl, title: item.data.title }
+    }
+  }
+  return json({ command: { ...result.data, payload } })
 })
 
