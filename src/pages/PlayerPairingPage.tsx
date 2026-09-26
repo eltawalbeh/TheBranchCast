@@ -19,87 +19,89 @@ type Player = {
   pairing_expires_at: string | null
   paired_at: string | null
 }
-const db = supabase as any
+
+function isActiveCode(player: Player) {
+  if (!player.pairing_code || !player.pairing_expires_at) return false
+  return new Date(player.pairing_expires_at).getTime() > Date.now()
+}
 
 export function PlayerPairingPage() {
   const { workspace } = useWorkspace()
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState("")
+
   const load = useCallback(async () => {
-    if (!db || !workspace) return
+    if (!workspace) return
     setLoading(true)
-    const result = await db
+    const result = await supabase
       .from("players")
       .select(
         "id,display_name,device_code,state,pairing_code,pairing_expires_at,paired_at",
       )
       .order("display_name")
-    setPlayers((result.data ?? []) as Player[])
+    setPlayers((result.data || []) as Player[])
     setLoading(false)
   }, [workspace?.id])
+
   useEffect(() => {
     void load()
   }, [load])
-  const regenerate = async (id: string) => {
-    const code = crypto
-      .randomUUID()
-      .replaceAll("-", "")
-      .slice(0, 6)
-      .toUpperCase()
-    const result = await db
-      .from("players")
-      .update({
-        pairing_code: code,
-        pairing_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        state: "unpaired",
-        paired_at: null,
-      })
-      .eq("id", id)
-    setMessage(result.error?.message ?? "New pairing code generated.")
-    if (!result.error) await load()
+
+  const generate = async (playerId: string) => {
+    setMessage("")
+    const result = await supabase.functions.invoke("player-manager-control", {
+      body: { player_id: playerId, action: "regenerate" },
+    })
+    if (result.error) {
+      setMessage(result.error.message || "Could not generate a pairing code.")
+      return
+    }
+    setMessage("New pairing code generated.")
+    await load()
   }
+
   const copy = async (code: string) => {
     await navigator.clipboard?.writeText(code)
     setMessage("Pairing code copied.")
   }
+
   return (
-    <div style={page}>
+    <main style={page}>
       <header style={header}>
         <div>
           <p style={eyebrow}>DEVICE ACTIVATION</p>
           <h1 style={title}>Pair a player</h1>
           <p style={sub}>
-            Use a temporary code to activate a BranchCast player for its
-            assigned zone.
+            Enter the active code on the desktop or mobile browser that should
+            play audio.
           </p>
         </div>
-        <button style={button} onClick={() => void load()}>
+        <button type="button" style={button} onClick={() => void load()}>
           <RefreshCw size={15} /> Refresh
         </button>
       </header>
-      {message && (
-        <p style={{ color: "var(--signal)", fontSize: 13 }}>{message}</p>
-      )}
+      {message ? <p style={messageStyle}>{message}</p> : null}
       <section style={notice}>
         <ShieldCheck size={20} />
-        <div>
-          <strong>How pairing works</strong>
-          <p>
-            Open <Link to="/player" style={{ color: "var(--signal)", fontWeight: 700 }}>Player Mode</Link> on the desktop or mobile browser that should play the audio, enter the active code below, then keep that tab open. The code expires after 15 minutes and can be regenerated.
-          </p>
-        </div>
+        <p style={sub}>
+          Open{" "}
+          <Link to="/player" style={link}>
+            Player Mode
+          </Link>
+          , enter an active code, and keep that browser tab open. Codes expire
+          after 15 minutes.
+        </p>
       </section>
-      {loading ? (
-        <p style={sub}>Loading players…</p>
-      ) : (
+      {loading ? <p style={sub}>Loading players...</p> : null}
+      {!loading && players.length === 0 ? (
+        <p style={sub}>No players registered yet. Add a location first.</p>
+      ) : null}
+      {!loading && players.length > 0 ? (
         <section style={card}>
-          {players.length === 0 ? (
-            <p style={sub}>No players registered yet. Add a location first.</p>
-          ) : (
-            players.map((player) => {
-              const codeActive = Boolean(player.pairing_code && player.pairing_expires_at && new Date(player.pairing_expires_at).getTime() > Date.now())
-              return (
+          {players.map((player) => {
+            const active = isActiveCode(player)
+            return (
               <article style={row} key={player.id}>
                 <div>
                   <strong>{player.display_name || "Unnamed player"}</strong>
@@ -107,50 +109,48 @@ export function PlayerPairingPage() {
                     Device {player.device_code} · {player.state}
                   </small>
                 </div>
-                {player.pairing_code && codeActive ? (
+                {active ? (
                   <div style={codeBox}>
-                    <span>PAIRING CODE</span>
-                    <strong>{player.pairing_code}</strong>
+                    <span style={codeLabel}>PAIRING CODE</span>
+                    <strong style={codeValue}>{player.pairing_code}</strong>
                     <small>
                       Expires{" "}
-                      {player.pairing_expires_at
-                        ? new Date(
-                            player.pairing_expires_at,
-                          ).toLocaleTimeString()
-                        : "soon"}
+                      {new Date(
+                        player.pairing_expires_at as string,
+                      ).toLocaleTimeString()}
                     </small>
                     <button
+                      type="button"
                       style={copyButton}
-                      onClick={() => void copy(player.pairing_code!)}
+                      onClick={() => void copy(player.pairing_code as string)}
                     >
                       <Copy size={14} /> Copy
                     </button>
                   </div>
                 ) : (
                   <div style={paired}>
-                    <CheckCircle2 size={16} /> {player.pairing_code ? 'Code expired' : 'Paired'}
-                    {player.paired_at
-                      ? ` · ${new Date(player.paired_at).toLocaleString()}`
-                      : ""}
+                    <CheckCircle2 size={16} />{" "}
+                    {player.pairing_code ? "Code expired" : "Paired"}
                   </div>
                 )}
                 <button
+                  type="button"
                   style={secondary}
-                  onClick={() => void regenerate(player.id)}
+                  onClick={() => void generate(player.id)}
                 >
                   <KeyRound size={14} />{" "}
-                  {player.pairing_code && codeActive ? "Regenerate" : "Generate code"}
-                  </button>
+                  {active ? "Regenerate" : "Generate code"}
+                </button>
               </article>
-              )
-            })
-          )}
+            )
+          })}
         </section>
-      )}
-    </div>
+      ) : null}
+    </main>
   )
 }
-const page = { padding: "32px 40px", maxWidth: 1100, margin: "0 auto" } as const
+
+const page = { padding: "32px 40px", maxWidth: 1100, margin: "0 auto" }
 const header = {
   display: "flex",
   justifyContent: "space-between",
@@ -158,16 +158,17 @@ const header = {
   gap: 16,
   flexWrap: "wrap",
   marginBottom: 24,
-} as const
+}
 const eyebrow = {
   margin: 0,
   color: "var(--signal)",
   fontWeight: 600,
   fontSize: 12,
   letterSpacing: ".06em",
-} as const
-const title = { margin: "5px 0", fontSize: 28, color: "var(--ink)" } as const
-const sub = { margin: 0, color: "var(--ink-secondary)", fontSize: 13 } as const
+}
+const title = { margin: "5px 0", fontSize: 28, color: "var(--ink)" }
+const sub = { margin: 0, color: "var(--ink-secondary)", fontSize: 13 }
+const link = { color: "var(--signal)", fontWeight: 700 }
 const button = {
   display: "inline-flex",
   alignItems: "center",
@@ -177,7 +178,8 @@ const button = {
   padding: "10px 13px",
   background: "#fff",
   cursor: "pointer",
-} as const
+}
+const messageStyle = { color: "var(--signal)", fontSize: 13 }
 const notice = {
   display: "flex",
   gap: 13,
@@ -186,13 +188,13 @@ const notice = {
   background: "var(--surface-subtle)",
   color: "var(--ink-secondary)",
   marginBottom: 18,
-} as const
+}
 const card = {
   background: "#fff",
   border: "1px solid var(--border-color)",
   borderRadius: 14,
   padding: "4px 20px",
-} as const
+}
 const row = {
   display: "grid",
   gridTemplateColumns: "1.2fr 1fr auto",
@@ -200,10 +202,10 @@ const row = {
   gap: 16,
   padding: "18px 0",
   borderBottom: "1px solid var(--border-color)",
-} as const
-const codeBox = { display: "grid", gap: 3 } as const
-const codeBoxSpan = {}
-const codeBoxStrong = {}
+}
+const codeBox = { display: "grid", gap: 3 }
+const codeLabel = { fontSize: 11, color: "var(--ink-tertiary)" }
+const codeValue = { fontSize: 22, letterSpacing: 2 }
 const copyButton = {
   display: "inline-flex",
   alignItems: "center",
@@ -214,7 +216,7 @@ const copyButton = {
   cursor: "pointer",
   padding: 0,
   fontSize: 12,
-} as const
+}
 const secondary = {
   display: "inline-flex",
   alignItems: "center",
@@ -224,11 +226,11 @@ const secondary = {
   padding: "9px 11px",
   background: "#fff",
   cursor: "pointer",
-} as const
+}
 const paired = {
   display: "inline-flex",
   alignItems: "center",
   gap: 6,
   color: "var(--success)",
   fontSize: 13,
-} as const
+}
