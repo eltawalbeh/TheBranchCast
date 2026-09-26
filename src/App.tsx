@@ -1,84 +1,137 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppShell } from '@/components/shell/AppShell';
-import { OverviewPage } from '@/pages/OverviewPage';
-import { AlertCenterPage } from '@/pages/AlertCenterPage';
-import { AccessDeniedPage } from '@/pages/AccessDeniedPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { AuthProvider } from '@/providers/AuthProvider';
-import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
-import { RequireAuth } from '@/components/auth/RequireAuth';
-import { RequireWorkspace } from '@/components/workspace/RequireWorkspace';
-import { LandingPage } from '@/pages/LandingPage';
-import { AuthPage } from '@/pages/AuthPage';
-import { OnboardingPage } from '@/pages/OnboardingPage';
-import { AddLocationPage, LocationDetailPage, LocationsPage } from '@/pages/LocationsPage';
-import { ContentLibraryPage } from '@/pages/ContentLibraryPage';
-import { CampaignsPage } from '@/pages/CampaignsPage';
-import { SchedulePage } from '@/pages/SchedulePage';
-import { MonitoringPage } from '@/pages/MonitoringPage';
-import { ReportsPage } from '@/pages/ReportsPage';
-import { TeamPage } from '@/pages/TeamPage';
-import { OrganizationSettingsPage } from '@/pages/OrganizationSettingsPage';
-import { BranchManagerPage } from '@/pages/BranchManagerPage';
-import { ReportIssuePage } from '@/pages/ReportIssuePage';
-import { ActivityPage } from '@/pages/ActivityPage';
-import { HelpPage } from '@/pages/HelpPage';
-import { BillingPage } from '@/pages/BillingPage';
-import { InvoicesPage } from '@/pages/InvoicesPage';
-import { PlayerFleetPage } from '@/pages/PlayerFleetPage';
-import { PlaybackPage } from '@/pages/PlaybackPage';
-import { ProductionReadinessPage } from '@/pages/ProductionReadinessPage';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { AuthProvider } from "@/providers/AuthProvider"
+import { WorkspaceProvider } from "@/providers/WorkspaceProvider"
+import { RequireAuth } from "@/components/auth/RequireAuth"
+import { RequireWorkspace } from "@/components/workspace/RequireWorkspace"
+import { RequireRole } from "@/components/auth/RequireRole"
+import { AppShell } from "@/components/shell/AppShell"
+import { LandingPage } from "@/pages/LandingPage"
+import { AuthPage } from "@/pages/AuthPage"
+import { OnboardingPage } from "@/pages/OnboardingPage"
+import { OverviewPage } from "@/pages/OverviewPage"
+import { AlertCenterPage } from "@/pages/AlertCenterPage"
+import { AccessDeniedPage } from "@/pages/AccessDeniedPage"
+import { NotFoundPage } from "@/pages/NotFoundPage"
+import { MyLocationPage } from "@/pages/MyLocationPage"
+import {
+  AddLocationPage,
+  LocationDetailPage,
+  LocationsPage,
+} from "@/pages/LocationsPage"
+import { ContentLibraryPage } from "@/pages/ContentLibraryPage"
+import { CampaignsPage } from "@/pages/CampaignsPage"
+import { SchedulePage } from "@/pages/SchedulePage"
+import { MonitoringPage } from "@/pages/MonitoringPage"
+import { ReportsPage } from "@/pages/ReportsPage"
+import { TeamPage } from "@/pages/TeamPage"
+import { OrganizationSettingsPage } from "@/pages/OrganizationSettingsPage"
+import { ReportIssuePage } from "@/pages/ReportIssuePage"
+import { ActivityPage } from "@/pages/ActivityPage"
+import { HelpPage } from "@/pages/HelpPage"
+import { BillingPage } from "@/pages/BillingPage"
+import { InvoicesPage } from "@/pages/InvoicesPage"
+import { PlayerFleetPage } from "@/pages/PlayerFleetPage"
+import { PlaybackPage } from "@/pages/PlaybackPage"
+import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage"
 
 export default function App() {
   return (
     <AuthProvider>
       <WorkspaceProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<AuthPage mode="login" />} />
-          <Route path="/signup" element={<AuthPage mode="signup" />} />
-          <Route element={<RequireAuth />}>
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route element={<RequireWorkspace />}>
-            <Route element={<AppShell />}>
-            <Route index element={<Navigate to="/overview" replace />} />
-            <Route path="/overview" element={<OverviewPage />} />
-            <Route path="/my-location" element={<BranchManagerPage />} />
-            <Route path="/monitoring/alerts" element={<AlertCenterPage />} />
-            <Route path="/access-denied" element={<AccessDeniedPage />} />
-            <Route path="/not-found" element={<NotFoundPage />} />
-
-            <Route path="/locations" element={<LocationsPage />} />
-            <Route path="/locations/new" element={<AddLocationPage />} />
-            <Route path="/locations/:id" element={<LocationDetailPage />} />
-            <Route path="/content" element={<ContentLibraryPage />} />
-            <Route path="/campaigns" element={<CampaignsPage />} />
-            <Route path="/campaigns/new" element={<CampaignsPage />} />
-            <Route path="/campaigns/:id" element={<CampaignsPage />} />
-            <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/monitoring" element={<MonitoringPage />} />
-            <Route path="/players" element={<PlayerFleetPage />} />
-            <Route path="/players/playback" element={<PlaybackPage />} />
-            <Route path="/production-readiness" element={<ProductionReadinessPage />} />
-            <Route path="/monitoring/activity" element={<ActivityPage />} />
-            <Route path="/activity" element={<ActivityPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/team" element={<TeamPage />} />
-            <Route path="/settings" element={<OrganizationSettingsPage />} />
-            <Route path="/settings/billing" element={<BillingPage />} />
-            <Route path="/settings/billing/invoices" element={<InvoicesPage />} />
-            <Route path="/organization/team" element={<TeamPage />} />
-            <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
-            <Route path="/my-location/report-issue" element={<ReportIssuePage />} />
-            <Route path="/help" element={<HelpPage />} />
-            <Route path="*" element={<Navigate to="/not-found" replace />} />
-          </Route>
-          </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage mode="login" />} />
+            <Route path="/signup" element={<AuthPage mode="signup" />} />
+            <Route element={<RequireAuth />}>
+              <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route element={<RequireWorkspace />}>
+                <Route element={<AppShell />}>
+                  <Route index element={<Navigate to="/overview" replace />} />
+                  <Route path="/overview" element={<OverviewPage />} />
+                  <Route
+                    path="/monitoring/alerts"
+                    element={<AlertCenterPage />}
+                  />
+                  <Route path="/access-denied" element={<AccessDeniedPage />} />
+                  <Route path="/not-found" element={<NotFoundPage />} />
+                  <Route element={<RequireRole roles={["branch"]} />}>
+                    <Route path="/my-location" element={<MyLocationPage />} />
+                    <Route
+                      path="/my-location/report-issue"
+                      element={<ReportIssuePage />}
+                    />
+                  </Route>
+                  <Route
+                    element={
+                      <RequireRole
+                        roles={["owner", "marketing", "operations", "viewer"]}
+                      />
+                    }
+                  >
+                    <Route path="/locations" element={<LocationsPage />} />
+                    <Route
+                      path="/locations/:id"
+                      element={<LocationDetailPage />}
+                    />
+                    <Route path="/content" element={<ContentLibraryPage />} />
+                    <Route path="/campaigns" element={<CampaignsPage />} />
+                    <Route path="/campaigns/new" element={<CampaignsPage />} />
+                    <Route path="/campaigns/:id" element={<CampaignsPage />} />
+                    <Route path="/schedule" element={<SchedulePage />} />
+                    <Route path="/monitoring" element={<MonitoringPage />} />
+                    <Route path="/players" element={<PlayerFleetPage />} />
+                    <Route
+                      path="/players/playback"
+                      element={<PlaybackPage />}
+                    />
+                    <Route path="/reports" element={<ReportsPage />} />
+                    <Route path="/activity" element={<ActivityPage />} />
+                    <Route
+                      path="/monitoring/activity"
+                      element={<ActivityPage />}
+                    />
+                  </Route>
+                  <Route
+                    element={<RequireRole roles={["owner", "operations"]} />}
+                  >
+                    <Route
+                      path="/locations/new"
+                      element={<AddLocationPage />}
+                    />
+                    <Route path="/team" element={<TeamPage />} />
+                    <Route path="/organization/team" element={<TeamPage />} />
+                  </Route>
+                  <Route element={<RequireRole roles={["owner"]} />}>
+                    <Route
+                      path="/settings"
+                      element={<OrganizationSettingsPage />}
+                    />
+                    <Route
+                      path="/organization/settings"
+                      element={<OrganizationSettingsPage />}
+                    />
+                    <Route path="/settings/billing" element={<BillingPage />} />
+                    <Route
+                      path="/settings/billing/invoices"
+                      element={<InvoicesPage />}
+                    />
+                  </Route>
+                  <Route
+                    path="/production-readiness"
+                    element={<ProductionReadinessPage />}
+                  />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route
+                    path="*"
+                    element={<Navigate to="/not-found" replace />}
+                  />
+                </Route>
+              </Route>
+            </Route>
+          </Routes>
+        </BrowserRouter>
       </WorkspaceProvider>
     </AuthProvider>
-  );
+  )
 }
