@@ -1,38 +1,51 @@
-# BranchCast Release Smoke Test
+# BranchCast release smoke test
 
-Run this checklist against the deployed build and record the date, commit SHA, tester, and result.
+Run against the deployed BranchCast URL in a fresh private browser window. Use a disposable
+test email and remove the test account after the run.
 
-## Public and authentication
+## 1. Public entry and auth
 
-- [ ] Landing page loads on desktop and mobile.
-- [ ] Login, signup, logout, and password recovery complete successfully.
-- [ ] An unauthenticated user cannot open protected routes.
-- [ ] Organization switching never exposes another organization's data.
+- [ ] `/` loads without a console error; primary CTA reaches `/login`.
+- [ ] Invalid credentials show an inline error and preserve the form values.
+- [ ] Valid login redirects to `/overview` or `/onboarding` according to account state.
+- [ ] Signup creates one user and does not create duplicate workspaces on refresh.
+- [ ] Refreshing an authenticated route preserves the session.
+- [ ] Sign out clears the session and returns to the public landing page.
 
-## Manager and branch manager
+## 2. Onboarding and workspace isolation
 
-- [ ] Dashboard loads with loading, empty, and error states.
-- [ ] Manager can view locations, content, campaigns, players, reports, billing, and invoices.
-- [ ] Branch manager is limited to the assigned location.
-- [ ] Report issue creates a record and shows confirmation.
+- [ ] Owner can create one organization/workspace and its first location.
+- [ ] Required fields, duplicate slug/name, and network failure have visible recovery states.
+- [ ] A second test user cannot read or mutate the first workspace's locations, players,
+      campaigns, content, alerts, or issue reports.
+- [ ] Browser back/forward does not bypass `RequireAuth` or `RequireWorkspace`.
 
-## Player runtime
+## 3. Core operations
 
-- [ ] Real player appears online after heartbeat.
-- [ ] Stale heartbeat changes the player to offline.
-- [ ] Now-playing state updates without a full page refresh.
-- [ ] A safe playback command is acknowledged or reports a useful failure.
+- [ ] Content Library lists, filters, and opens an item.
+- [ ] Upload rejects unsupported audio and files over 50 MB; valid upload stays private.
+- [ ] Campaign create/edit/target/publish flow persists after a hard refresh.
+- [ ] Schedule changes show the correct timezone and survive reload.
+- [ ] Monitoring shows online/offline state, last-seen time, and a next action.
+- [ ] Branch Manager can submit an issue and see confirmation/reference state.
+- [ ] Reports load empty, populated, and error states without a blank screen.
 
-## Billing and release safety
+## 4. Roles and safety
 
-- [ ] Test checkout or billing setup completes.
-- [ ] Duplicate webhook delivery does not duplicate an invoice or subscription event.
-- [ ] RLS, Storage, and audit-log checks pass.
-- [ ] Alert route, backup, rollback build, and incident owner are confirmed.
+- [ ] Owner can invite a team member and change role.
+- [ ] Operations manager can operate content/campaigns but cannot change organization ownership.
+- [ ] Branch manager sees only My Location and can report an issue.
+- [ ] A denied action shows `/access-denied` with a useful explanation.
+- [ ] No service-role key, private storage URL, or auth token appears in page source/logs.
 
-## Accessibility and localization
+## 5. Responsive and localization pass
 
-- [ ] Arabic RTL and English LTR layouts have no clipping or reversed actions.
-- [ ] Keyboard focus is visible and all primary actions are reachable.
-- [ ] Contrast, reduced-motion, and responsive checks pass.
+- [ ] Test 390px, 768px, and 1440px widths.
+- [ ] Test Arabic RTL and English LTR on auth, overview, tables, dialogs, and empty states.
+- [ ] Keyboard focus is visible; dialogs close with Escape; primary actions are reachable by Tab.
+- [ ] Loading, empty, error, and success states are distinguishable by text, not color alone.
 
+## Evidence to record
+
+Record browser/version, deployed commit, Supabase project ref, UTC timestamp, and links to
+the screenshots or console/network logs for any failed check. Never include credentials.
