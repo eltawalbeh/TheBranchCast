@@ -99,13 +99,16 @@ export function PlayerPairingPage() {
           ) : (
             players.map((player) => (
               <article style={row} key={player.id}>
+                {(() => {
+                  const codeActive = Boolean(player.pairing_code && player.pairing_expires_at && new Date(player.pairing_expires_at).getTime() > Date.now())
+                  return <>
                 <div>
                   <strong>{player.display_name || "Unnamed player"}</strong>
                   <small>
                     Device {player.device_code} · {player.state}
                   </small>
                 </div>
-                {player.pairing_code ? (
+                {player.pairing_code && codeActive ? (
                   <div style={codeBox}>
                     <span>PAIRING CODE</span>
                     <strong>{player.pairing_code}</strong>
@@ -126,7 +129,7 @@ export function PlayerPairingPage() {
                   </div>
                 ) : (
                   <div style={paired}>
-                    <CheckCircle2 size={16} /> Paired
+                    <CheckCircle2 size={16} /> {player.pairing_code ? 'Code expired' : 'Paired'}
                     {player.paired_at
                       ? ` · ${new Date(player.paired_at).toLocaleString()}`
                       : ""}
@@ -137,8 +140,10 @@ export function PlayerPairingPage() {
                   onClick={() => void regenerate(player.id)}
                 >
                   <KeyRound size={14} />{" "}
-                  {player.pairing_code ? "Regenerate" : "Pair again"}
+                  {player.pairing_code && codeActive ? "Regenerate" : "Generate code"}
                 </button>
+                  </>
+                })()}
               </article>
             ))
           )}
@@ -213,20 +218,3 @@ const copyButton = {
   fontSize: 12,
 } as const
 const secondary = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  border: "1px solid var(--border-color)",
-  borderRadius: 8,
-  padding: "9px 11px",
-  background: "#fff",
-  cursor: "pointer",
-} as const
-const paired = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  color: "var(--success)",
-  fontSize: 13,
-} as const
-
