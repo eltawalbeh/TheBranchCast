@@ -113,6 +113,7 @@ export function BrowserPlayerPage() {
               try { await audioRef.play(); setAudioReady(true); } catch { throw new Error('Browser audio is blocked. Tap Enable audio, then press Play again.'); }
               setTrack(command.payload?.title || 'Audio asset');
             } else if (command.command === 'pause') audioRef.pause();
+            else if (command.command === 'stop') { audioRef.pause(); audioRef.currentTime = 0; setPlaying(false); setTrack('No audio selected'); }
             else if (command.command === 'skip') { audioRef.pause(); audioRef.currentTime = 0; setTrack('No audio selected'); }
             setMessage(`Command completed: ${command.command}`);
             await call('player-browser-runtime', { session_token: session.token, action: 'ack', command_id: command.id, status: 'acknowledged' });

@@ -6,6 +6,7 @@ import {
   X, Building2,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLocale } from '@/providers/LocaleProvider';
 
 export type DemoRole = 'owner' | 'marketing' | 'operations' | 'branch' | 'viewer';
 
@@ -114,6 +115,7 @@ function SidebarContent({ role, onRoleChange, onClose, organizationName }: {
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { locale, toggleLocale } = useLocale();
   const userName = String(user?.user_metadata.full_name ?? user?.email?.split('@')[0] ?? 'BranchCast user');
   const initials = userName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
 
@@ -138,7 +140,7 @@ function SidebarContent({ role, onRoleChange, onClose, organizationName }: {
           BranchCast
         </span>
         {onClose && (
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onClose} aria-label="Close navigation" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4 }}>
             <X size={18} />
           </button>
         )}
@@ -185,11 +187,17 @@ function SidebarContent({ role, onRoleChange, onClose, organizationName }: {
         ))}
       </nav>
 
+      <button className="locale-switch" onClick={toggleLocale} aria-label="Change language">
+        <span>{locale === 'ar' ? 'العربية' : 'English'}</span>
+        <span>{locale === 'ar' ? 'EN' : 'عربي'}</span>
+      </button>
+
       {/* Demo role switcher */}
       <div style={{ display: 'none', padding: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setRolePickerOpen(p => !p)}
+            className="mobile-sidebar-panel"
             style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 8px', borderRadius: 6,
@@ -320,6 +328,13 @@ export function Sidebar(props: SidebarProps) {
               animation: 'slideInLeft var(--motion-emphasis) ease-out',
             }}
             onClick={e => e.stopPropagation()}
+            onTouchStart={event => { (event.currentTarget as HTMLElement).dataset.touchStart = String(event.touches[0]?.clientX ?? 0); }}
+            onTouchEnd={event => {
+              const start = Number((event.currentTarget as HTMLElement).dataset.touchStart ?? 0);
+              const end = event.changedTouches[0]?.clientX ?? start;
+              const rtl = document.documentElement.dir === 'rtl';
+              if ((!rtl && end - start < -60) || (rtl && end - start > 60)) props.onMobileClose();
+            }}
           >
             <SidebarContent role={props.role} onRoleChange={props.onRoleChange} onClose={props.onMobileClose} organizationName={props.organizationName} />
           </div>
@@ -327,6 +342,9 @@ export function Sidebar(props: SidebarProps) {
       )}
 
       <style>{`
+        .locale-switch { display:flex; justify-content:space-between; align-items:center; margin: 8px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.10); border-radius: 8px; background: rgba(255,255,255,.04); color: rgba(255,255,255,.72); font: inherit; font-size: 12px; cursor: pointer; }
+        .locale-switch span:last-child { color: var(--signal); font-weight: 600; }
+        .mobile-sidebar-panel { touch-action: pan-y; }
         @media (min-width: 768px) {
           .sidebar-desktop { display: flex !important; height: 100vh; position: sticky; top: 0; flex-shrink: 0; }
         }
@@ -334,6 +352,11 @@ export function Sidebar(props: SidebarProps) {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
         }
+        @media (max-width: 767px) {
+          .mobile-sidebar-panel { width: min(86vw, 320px); height: 100%; }
+          [dir="rtl"] .mobile-sidebar-panel { right: 0; left: auto; animation-name: slideInRight; }
+        }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
       `}</style>
     </>
   );

@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar"
 import { useWorkspace } from "@/providers/WorkspaceProvider"
 import { supabase } from "@/lib/supabase"
 import { useWorkspaceRealtime } from "@/hooks/useWorkspaceRealtime"
+import { PlaybackMiniPlayer } from "@/components/playback/PlaybackMiniPlayer"
 
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -55,6 +56,7 @@ export function AppShell() {
         <main style={{ flex: 1 }}>
           <Outlet context={{ role }} />
         </main>
+        <PlaybackMiniPlayer />
       </div>
     </div>
   )
