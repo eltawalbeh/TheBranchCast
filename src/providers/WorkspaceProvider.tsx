@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/database';
@@ -21,16 +21,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   // RequireWorkspace redirect before this provider's first refresh runs.
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadedUserRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!supabase || !user) {
+      loadedUserRef.current = null;
       setWorkspace(null);
       setError(null);
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (loadedUserRef.current !== user.id) setIsLoading(true);
     setError(null);
     try {
       const { data, error: queryError } = await supabase
@@ -50,13 +52,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         role: data.role,
         locationId: data.location_id,
       } : null);
+      loadedUserRef.current = user.id;
     } catch (caught) {
       setWorkspace(null);
       setError(caught instanceof Error ? caught.message : 'Unable to load your workspace.');
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (authLoading) {
@@ -65,6 +68,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
 
     if (!user) {
+      loadedUserRef.current = null;
       setWorkspace(null);
       setError(null);
       setIsLoading(false);
@@ -73,9 +77,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     // Keep the route guard in a loading state for the whole first request.
     // This prevents a restored session from being mistaken for a new user.
-    setIsLoading(true);
     void refresh();
-  }, [authLoading, user?.id, refresh]);
+  }, [authLoading, user?.id]);
 
   const value = useMemo(() => ({ workspace, isLoading, error, refresh }), [workspace, isLoading, error, refresh]);
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

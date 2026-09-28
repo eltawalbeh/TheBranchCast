@@ -11,7 +11,7 @@ export function PlaybackMiniPlayer() {
   const navigate = useNavigate();
   const { workspace } = useWorkspace();
   const [player, setPlayer] = useState<Player | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(() => localStorage.getItem('branchcast.playback-state') === 'playing');
   const [expanded, setExpanded] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +24,8 @@ export function PlaybackMiniPlayer() {
       if (!cancelled) setPlayer((data?.[0] as Player | undefined) ?? null);
     };
     void load();
-    return () => { cancelled = true; };
+    const timer = window.setInterval(() => void load(), 5000);
+    return () => { cancelled = true; window.clearInterval(timer); };
   }, [workspace?.id]);
 
   const send = async (command: 'play' | 'pause' | 'skip' | 'stop') => {
@@ -32,7 +33,11 @@ export function PlaybackMiniPlayer() {
     setBusy(true); setError('');
     const result = await (supabase as any).from('player_commands').insert({ player_id: player.id, command, payload: {}, status: 'pending' });
     if (result.error) setError(result.error.message);
-    else setPlaying(command === 'play' ? true : command === 'pause' || command === 'skip' || command === 'stop' ? false : playing);
+    else {
+      const next = command === 'play';
+      setPlaying(next);
+      localStorage.setItem('branchcast.playback-state', next ? 'playing' : 'stopped');
+    }
     setBusy(false);
   };
 

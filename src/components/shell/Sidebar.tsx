@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, MapPin, Music, Megaphone, CalendarDays, Radio,
+  LayoutDashboard, MapPin, Music, Megaphone, CalendarDays, Radio, PlayCircle,
   BarChart3, Users, Settings, HelpCircle, ChevronDown, ChevronRight,
   X, Building2,
 } from 'lucide-react';
@@ -16,6 +16,7 @@ const allNavItems = [
   { label: 'Locations', icon: Building2, to: '/locations', roles: ['owner', 'marketing', 'operations', 'viewer'] },
   { label: 'Content', icon: Music, to: '/content', roles: ['owner', 'marketing', 'operations', 'viewer'] },
   { label: 'Campaigns', icon: Megaphone, to: '/campaigns', roles: ['owner', 'marketing', 'operations', 'viewer'] },
+  { label: 'Playback', icon: PlayCircle, to: '/players/playback', roles: ['owner', 'marketing', 'operations', 'viewer'] },
   { label: 'Schedule', icon: CalendarDays, to: '/schedule', roles: ['owner', 'marketing', 'operations', 'viewer'] },
   { label: 'Monitoring', icon: Radio, to: '/monitoring/alerts', roles: ['owner', 'marketing', 'operations', 'viewer'], badge: 2 },
   { label: 'Reports', icon: BarChart3, to: '/reports', roles: ['owner', 'marketing', 'operations', 'viewer'] },
